@@ -20,15 +20,14 @@ struct cromossomo {
 
 
 int i, j, k;
-int totalArmas = 0;
+int numeroTotalArmas = 0;
 int numeroTipoArmas = 0, numeroAlvos = 0;
 int nPopulacao = 0;
 int taxaMutacao;
-int iteracoes;
+int iteracao;
+int maxIteracoes;
 float floatTemp;
-float tempProbabilidades;
 float aux;
-float somatorio = 0;
 float mult = 1;
 int a = 0;
 
@@ -38,11 +37,7 @@ float **matrizProbabilidades = NULL;
 
 struct cromossomo *populacao = NULL;
 struct cromossomo *novaPopulacao = NULL;
-struct cromossomo MelhorSolucao;
-
-
-float melhor_exaustivo = 999999.0;
-int *melhor_exaustivo_vet = NULL;
+struct cromossomo melhorSolucao;
 
 
 
@@ -71,10 +66,8 @@ void mutacao() {
 
 
 	for (i = 0; i < nPopulacao; i++) {
-		for (j = 0; j < totalArmas; j++) {
+		for (j = 0; j < numeroTotalArmas; j++) {
 			if (rand() % 100 < taxaMutacao) {
-
-				//printf("---%d %d\n", i, j);
 
 				random = rand() % numeroAlvos;
 				while (random == populacao[i].armas[j].alvo.tipo) {
@@ -86,32 +79,64 @@ void mutacao() {
 	}
 }
 
-void evaluate() {
+float avaliar(cromossomo &populacao) {
 	float mult = 0;
 	float somatorio = 0;
 	float aux;
-	int i, j;
+
+
+	for (j = 0; j < numeroAlvos; j++) {
+		aux = VetorAlvos[j].valor;
+		mult = 1;
+
+		for (k = 0; k < numeroTotalArmas; k++) {
+			if (populacao.armas[k].alvo.tipo == j) {
+				mult = (1 - matrizProbabilidades[populacao.armas[k].tipo][j]) * mult;
+			}
+		}
+		somatorio += aux * mult;
+
+	}
+	populacao.fitness = somatorio;
+	return somatorio;
+}
+
+void avaliar_populacao() {
+	for (i = 0; i < nPopulacao; i++)
+		avaliar(populacao[i]);
+
+	ordenarPopulacao();
+	if (populacao[0].fitness < melhorSolucao.fitness) {
+		for (j = 0; j < numeroTotalArmas; j++) {
+			melhorSolucao.armas[j].alvo.tipo = populacao[0].armas[j].alvo.tipo;
+			melhorSolucao.fitness = populacao[0].fitness;
+			iteracao = 0;
+		}
+		for (k = 0; k < numeroTotalArmas; k++) {
+			printf_s("%1d ", melhorSolucao.armas[k].alvo.tipo);
+		}
+		printf_s("\t%f\n", melhorSolucao.fitness);
+	}
+}
+
+void buscal_local() {
+	int i, j, k;
+	struct cromossomo temp;
+	temp.armas = (struct arma*)malloc(numeroTotalArmas * sizeof(struct arma));
+	for (i = 0; i < numeroTotalArmas; i++)
+		temp.armas[i].tipo = VetorArmas[i].tipo;
 
 	for (i = 0; i < nPopulacao; i++) {
-		for (j = 0; j < numeroAlvos; j++) {
-			aux = VetorAlvos[j].valor;
-			mult = 1;
-			for (k = 0; k < totalArmas; k++) {
-				if (populacao[i].armas[k].alvo.tipo == j) {
-					mult = (1 - matrizProbabilidades[populacao[i].armas[k].tipo][j]) * mult;
+		for (j = 0; j < numeroTotalArmas; j++) {
+			for (k = 0; k < numeroTotalArmas; k++)
+				temp.armas[k].alvo.tipo = populacao[i].armas[k].alvo.tipo;
+			for (k = 0; k < numeroAlvos; k++) {
+				temp.armas[j].alvo.tipo = k;
+				if (avaliar(temp) < populacao[i].fitness) {
+					populacao[i].armas[j].alvo.tipo = k;
+					avaliar(populacao[i]);
 				}
 			}
-			somatorio += aux * mult;
-		}
-		populacao[i].fitness = somatorio;
-		somatorio = 0;
-	}
-	ordenarPopulacao();
-	if (populacao[0].fitness < MelhorSolucao.fitness) {
-		for (j = 0; j < totalArmas; j++) {
-			MelhorSolucao.armas[j].alvo.tipo = populacao[0].armas[j].alvo.tipo;
-			MelhorSolucao.fitness = populacao[0].fitness;
-			i = 0;
 		}
 	}
 }
@@ -119,7 +144,7 @@ void evaluate() {
 void imprimirpopulacao(struct cromossomo *populacao) {
 	for (i = 0; i < nPopulacao; i++) {
 		printf("%d: ", i);
-		for (j = 0; j < totalArmas; j++) {
+		for (j = 0; j < numeroTotalArmas; j++) {
 			printf("%d ", populacao[i].armas[j].alvo.tipo);
 		}
 		printf("%f\n", populacao[i].fitness);
@@ -127,37 +152,37 @@ void imprimirpopulacao(struct cromossomo *populacao) {
 	printf("\n\n");
 }
 
-void start() {
+void start(FILE *in_file) {
 	int intTemp;
 	float floatTemp;
 	float tempProbabilidades;
-	printf("Insira o numero de tipos de armas: ");
-	scanf_s("%d", &numeroTipoArmas);
+	//printf("Insira o numero de tipos de armas: ");
+	fscanf_s(in_file, "%d", &numeroTipoArmas);
 
 	for (i = 0; i < numeroTipoArmas; i++) {
-		printf("Insira a quantidade de armas do tipo %d: ", i);
-		scanf_s("%d", &intTemp);
+		//printf("Insira a quantidade de armas do tipo %d: ", i);
+		fscanf_s(in_file, "%d", &intTemp);
 
-		totalArmas += intTemp;
+		numeroTotalArmas += intTemp;
 
-		VetorArmas = (struct arma*)realloc(VetorArmas, totalArmas * sizeof(struct arma));
+		VetorArmas = (struct arma*)realloc(VetorArmas, numeroTotalArmas * sizeof(struct arma));
 
-		for (k = totalArmas - intTemp; k < totalArmas; k++) {
+		for (k = numeroTotalArmas - intTemp; k < numeroTotalArmas; k++) {
 			VetorArmas[k].tipo = i;
 		}
 	}
-	MelhorSolucao.armas = (struct arma*)malloc(totalArmas * sizeof(struct arma));
+	melhorSolucao.armas = (struct arma*)malloc(numeroTotalArmas * sizeof(struct arma));
 	intTemp = 0;
 
 
-	printf("Insira o numero de alvos: ");
-	scanf_s("%d", &numeroAlvos);
+	//printf("Insira o numero de alvos: ");
+	fscanf_s(in_file, "%d", &numeroAlvos);
 	VetorAlvos = (struct alvo*)malloc(numeroAlvos * sizeof(struct alvo));
 
 
 	for (i = 0; i < numeroAlvos; i++) {
-		printf("Insira o valor do alvo %d: ", i);
-		scanf_s("%f", &floatTemp);
+		//printf("Insira o valor do alvo %d: ", i);
+		fscanf_s(in_file, "%f", &floatTemp);
 		VetorAlvos[i].valor = floatTemp;
 		VetorAlvos[i].tipo = i;
 	}
@@ -171,8 +196,8 @@ void start() {
 
 	for (i = 0; i < numeroTipoArmas; i++) {
 		for (j = 0; j < numeroAlvos; j++) {
-			printf("Insira a chance da arma de tipo %d destruir o alvo %d: ", i + 1, j + 1);
-			scanf_s("%f", &tempProbabilidades);
+			//printf("Insira a chance da arma de tipo %d destruir o alvo %d: ", i + 1, j + 1);
+			fscanf_s(in_file, "%f", &tempProbabilidades);
 			matrizProbabilidades[i][j] = tempProbabilidades;
 			//matrizProbabilidades[i][j] = ((float)rand() / (float)(RAND_MAX));
 		}
@@ -182,8 +207,8 @@ void start() {
 void iniciarpopulacao() {
 	populacao = (struct cromossomo*)malloc(nPopulacao * sizeof(struct cromossomo));
 	for (i = 0; i < nPopulacao; i++) {
-		populacao[i].armas = (struct arma*)malloc(totalArmas * sizeof(struct arma));
-		for (j = 0; j < totalArmas; j++) {
+		populacao[i].armas = (struct arma*)malloc(numeroTotalArmas * sizeof(struct arma));
+		for (j = 0; j < numeroTotalArmas; j++) {
 			populacao[i].armas[j].tipo = VetorArmas[j].tipo;
 			populacao[i].armas[j].alvo = VetorAlvos[rand() % numeroAlvos];
 		}
@@ -191,54 +216,63 @@ void iniciarpopulacao() {
 
 	novaPopulacao = (struct cromossomo*)malloc(nPopulacao * sizeof(struct cromossomo));
 	for (i = 0; i < nPopulacao; i++) {
-		novaPopulacao[i].armas = (struct arma*)malloc(totalArmas * sizeof(struct arma));
-		for (j = 0; j < totalArmas; j++) {
+		novaPopulacao[i].armas = (struct arma*)malloc(numeroTotalArmas * sizeof(struct arma));
+		for (j = 0; j < numeroTotalArmas; j++) {
 			novaPopulacao[i].armas[j].tipo = VetorArmas[j].tipo;
 		}
 	}
+	avaliar_populacao();
 }
 
 void crossover() {
 	int selecionado1, selecionado2 = -1;
-	float faixa, random, random2;
+	float faixa = 0, random = 0, random2 = 0;
 	int corte = 0;
 	float total = 0;
+	int over = 1;
 
 	for (i = 0; i < nPopulacao; i++) {
 		total += populacao[i].fitness;
 	}
-	total = ceil(total);
-	//imprimirpopulacao(populacao);
+
+	if (total > RAND_MAX)
+		over += total / RAND_MAX;		
+		
+
 
 	for (i = 0; i < nPopulacao; i++) {
 
-
 		//SELECAO DOS PAIS
-		random = rand() % (int)total;
-		random2 = rand() % (int)total;
-		corte = (rand() % (totalArmas - 1)) + 1;
+		corte = (rand() % (numeroTotalArmas - 1)) + 1;
 
+		for (j = 0; j < over; j++)
+			random += (float)rand();
 
+		random /= (over * RAND_MAX / total);
 		faixa = 0;
 		for (selecionado1 = 0; selecionado1 < nPopulacao; selecionado1++) {
 			faixa += populacao[selecionado1].fitness;
-			if (faixa > random) {
+			if (random < faixa) {
 				break;
 			}
 		}
 
+		
+		do {
+			random2 = 0;
+			for (j = 0; j < over; j++)
+				random2 += (float)rand();
 
-
-		faixa = 0;
-		for (selecionado2 = 0; selecionado2 < nPopulacao; selecionado2++) {
-			faixa += populacao[selecionado2].fitness;
-			if (random2 < faixa) {
-				if (selecionado1 == selecionado2)
-					faixa += populacao[selecionado2].fitness;
-				else
+			random2 /= (over * RAND_MAX / total);
+			faixa = 0;
+			for (selecionado2 = 0; selecionado2 < nPopulacao; selecionado2++) {
+				faixa += populacao[selecionado2].fitness;
+				if (random2 < faixa) {
 					break;
+				}
 			}
-		}
+		} while (selecionado1 == selecionado2);
+			
 
 		selecionado1 = abs(selecionado1 - (nPopulacao - 1));
 		selecionado2 = abs(selecionado2 - (nPopulacao - 1));
@@ -250,117 +284,163 @@ void crossover() {
 		for (j = 0; j < corte; j++) {
 			novaPopulacao[i].armas[j].alvo.tipo = populacao[selecionado1].armas[j].alvo.tipo;
 		}
-		for (j = corte; j < totalArmas; j++) {
+		for (j = corte; j < numeroTotalArmas; j++) {
 			novaPopulacao[i].armas[j].alvo.tipo = populacao[selecionado2].armas[j].alvo.tipo;
 		}
 
-
 	}
-	//imprimirpopulacao(novaPopulacao);
 
 
 	for (i = 0; i < nPopulacao; i++) {
-		for (j = 0; j < totalArmas; j++) {
+		for (j = 0; j < numeroTotalArmas; j++) {
 			populacao[i].armas[j].alvo.tipo = novaPopulacao[i].armas[j].alvo.tipo;
 		}
 	}
 }
 
-int proxima(int a[], int N, int M) {
+int proxima(cromossomo &seq, int N, int M) {
 	int t = N - 1;
 	while (t >= 0) {
-		a[t] = (a[t] + 1) % M;
-		if (a[t] == 0) t--;
-		else return 0;
+		
+		seq.armas[t].alvo.tipo = (seq.armas[t].alvo.tipo + 1) % M;
+		if (seq.armas[t].alvo.tipo == 0)
+			t--;
+		else
+			return 0;
 	}
 	return -1;
 }
 
-float evaluate_exaustivo(int *v) {
-	float mult = 1;
-	float somatorio = 0;
-	float aux;
-	int i, j;
-	for (j = 0; j < numeroAlvos; j++) {
-		aux = VetorAlvos[j].valor;
-		mult = 1;
-		for (k = 0; k < totalArmas; k++) {
-			if (v[k] == j) {
-				mult = (1 - matrizProbabilidades[VetorArmas[k].tipo][j]) * mult;
-			}
-		}
-		somatorio += aux * mult;
-	}
-	return somatorio;
-}
-
-void imp_seq_n_base_m(int seq[], int n, int m) {
+void imp_seq_n_base_m(cromossomo &seq, int n, int m) {
 	int i;
 	int k;
-	float curr = 99999;
-	for (i = 0; i<n; i++) seq[i] = 0;
+	float curr = 999999;
+	for (i = 0; i < n; i++)
+		seq.armas[i].alvo.tipo = 0;
 	do {
-		curr = evaluate_exaustivo(seq);
-		if (curr < melhor_exaustivo) {
-			melhor_exaustivo = curr;
-			for (k = 0; k < totalArmas; k++) {
-				melhor_exaustivo_vet[k] = seq[k];
+		
+		curr = avaliar(seq);
+		
+		if (curr < melhorSolucao.fitness) {
+			melhorSolucao.fitness = curr;
+			for (k = 0; k < numeroTotalArmas; k++) {
+				melhorSolucao.armas[k].alvo.tipo = seq.armas[k].alvo.tipo;
 			}
+			
+			for (k = 0; k < numeroTotalArmas; k++) {
+				printf_s("%d ", seq.armas[k].alvo.tipo);
+			}
+			printf_s("\t%f\n", melhorSolucao.fitness);
 		}
+		
 	} while (proxima(seq, n, m) == 0);
+}
+
+void exaustivo() {
+	int i = 0;
+	cromossomo current;
+	current.armas = (struct arma*)malloc(numeroTotalArmas * sizeof(struct arma));
+	for (i = 0; i < numeroTotalArmas; i++)
+		current.armas[i].tipo = VetorArmas[i].tipo;
+	
+
+	imp_seq_n_base_m(current, numeroTotalArmas, numeroAlvos);
 }
 
 int main()
 {
-	int i, j;
+	int i;
+	int mode;
 	int msec;
+
 	srand((unsigned)time(NULL));
-
-
-	iteracoes = 100;
-	nPopulacao = 80;
-	taxaMutacao = 5;
-	MelhorSolucao.fitness = 9999999;
-
 	clock_t time_start;
 	clock_t time_end;
-	clock_t diff;
+	clock_t tempo_exaust;
+	clock_t tempo_metaheuristica;
+
+	FILE *out_file;
+	FILE *in_file;
+	FILE *param;
 
 
-
-	start();
-	iniciarpopulacao();
-
-	//time_start = clock();
-	evaluate();
-	for (i = 0; i < iteracoes; i++) {
-		crossover();
-		mutacao();
-		evaluate();
+	fopen_s(&out_file, "Resultados.txt", "a+");
+	fopen_s(&in_file, "Entrada.txt", "r");
+	fopen_s(&param, "Parametros.txt", "r");
+	if (in_file == NULL || param == NULL) {
+		printf_s("Arquivos de entrada inexistentes.\n");
+		return 0;
 	}
-	//time_end = clock();
+	fscanf_s(param, "%d", &maxIteracoes);
+	fscanf_s(param, "%d", &nPopulacao);
+	fscanf_s(param, "%d", &taxaMutacao);
 
 
-	printf("\nResultado: %f\n", MelhorSolucao.fitness);
-	for (i = 0; i < totalArmas; i++) {
-		printf("%d ", MelhorSolucao.armas[i].alvo.tipo);
-	}
-	printf("\n");
 
-	/*diff = time_end - time_start;
-	msec = diff * 1000 / CLOCKS_PER_SEC;
-	printf("\nTime1 taken %d seconds %d milliseconds\n", msec / 1000, msec % 1000);*/
+	
+
+	start(in_file);
+	fprintf_s(out_file, "Para %d armas e %d alvos:\n", numeroTotalArmas, numeroAlvos);
+
+
+	do {
+		system("cls");
+		printf_s("1- Metodo exaustivo\n2- Metodo meta-heuristica\n3- Ambos\nOpcao: ");
+		scanf_s("%d", &mode);
+	} while (mode < 1 || mode > 3);
+	
 
 
 	//EXAUSTIVO
-	/*time_start = clock();
-	exaustivo();
-	time_end = clock();
+	melhorSolucao.fitness = 9999999;
+	if (mode == 1 || mode == 3) {
+		printf("Rodando exaustivo...\n");
+		time_start = clock();
+		exaustivo();
+		time_end = clock();
+		tempo_exaust = time_end - time_start;
+
+		fprintf_s(out_file, "Exaustivo:\n%f\n", melhorSolucao.fitness);
+		for (i = 0; i < numeroTotalArmas; i++)
+			fprintf_s(out_file, "%d ", melhorSolucao.armas[i].alvo.tipo);
+
+		msec = tempo_exaust * 1000 / CLOCKS_PER_SEC;
+		fprintf_s(out_file, "\nTempo de execucao: %d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+	}
+	///////////////////////////////////////
 
 
-	diff = time_end - time_start;
-	msec = diff * 1000 / CLOCKS_PER_SEC;
-	printf("\nTime2 taken %d seconds %d milliseconds\n", msec / 1000, msec % 1000);*/
+	//META-HEURISTICA
+	melhorSolucao.fitness = 9999999;
+	if (mode == 2 || mode == 3) {
+		printf("\nRodando meta-heuristica...\n");
+		time_start = clock();
+		iniciarpopulacao();
+		for (iteracao = 0; iteracao < maxIteracoes; iteracao++) {
+			crossover();
+			mutacao();
+			if (iteracao > (0.95 * maxIteracoes))
+				buscal_local();
+			avaliar_populacao();
+		}
+		time_end = clock();
+		tempo_metaheuristica = time_end - time_start;
 
+		fprintf_s(out_file, "Meta-heuristica:\n%f\n", melhorSolucao.fitness);
+		for (i = 0; i < numeroTotalArmas; i++)
+			fprintf_s(out_file, "%d ", melhorSolucao.armas[i].alvo.tipo);
+
+		msec = tempo_metaheuristica * 1000 / CLOCKS_PER_SEC;
+		fprintf_s(out_file, "\nTempo de execucao: %d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+	}
+	//////////////////////////////////////
+
+
+
+	fclose(in_file);
+	fclose(out_file);
+	fclose(param);
+
+	system("pause");
 	return 0;
 }
