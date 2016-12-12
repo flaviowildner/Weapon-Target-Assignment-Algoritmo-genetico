@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include <stdlib.h>
 #include <time.h>
-#include <math.h>
 
 struct alvo {
 	float valor;
@@ -26,10 +25,9 @@ int nPopulacao = 0;
 int taxaMutacao;
 int iteracao;
 int maxIteracoes;
-float floatTemp;
-float aux;
-float mult = 1;
-int a = 0;
+
+
+
 
 struct arma *VetorArmas = NULL;
 struct alvo *VetorAlvos = NULL;
@@ -127,9 +125,9 @@ void buscal_local() {
 		temp.armas[i].tipo = VetorArmas[i].tipo;
 
 	for (i = 0; i < nPopulacao; i++) {
+		for (k = 0; k < numeroTotalArmas; k++)
+			temp.armas[k].alvo.tipo = populacao[i].armas[k].alvo.tipo;
 		for (j = 0; j < numeroTotalArmas; j++) {
-			for (k = 0; k < numeroTotalArmas; k++)
-				temp.armas[k].alvo.tipo = populacao[i].armas[k].alvo.tipo;
 			for (k = 0; k < numeroAlvos; k++) {
 				temp.armas[j].alvo.tipo = k;
 				if (avaliar(temp) < populacao[i].fitness) {
@@ -137,6 +135,7 @@ void buscal_local() {
 					avaliar(populacao[i]);
 				}
 			}
+			temp.armas[j].alvo.tipo = populacao[i].armas[j].alvo.tipo;
 		}
 	}
 }
@@ -273,11 +272,9 @@ void crossover() {
 			}
 		} while (selecionado1 == selecionado2);
 			
-
 		selecionado1 = abs(selecionado1 - (nPopulacao - 1));
 		selecionado2 = abs(selecionado2 - (nPopulacao - 1));
-		//printf("%d %d %d\n", selecionado1, selecionado2, corte);
-
+		////////////////////////
 
 
 		//REPRODUCAO
@@ -287,6 +284,7 @@ void crossover() {
 		for (j = corte; j < numeroTotalArmas; j++) {
 			novaPopulacao[i].armas[j].alvo.tipo = populacao[selecionado2].armas[j].alvo.tipo;
 		}
+		/////////////////
 
 	}
 
@@ -352,10 +350,13 @@ int main()
 	int i;
 	int mode;
 	int msec;
+	float pontoBuscaLocal = 1;
+
+
 
 	srand((unsigned)time(NULL));
-	clock_t time_start;
-	clock_t time_end;
+	clock_t tempo_inicio;
+	clock_t tempo_fim;
 	clock_t tempo_exaust;
 	clock_t tempo_metaheuristica;
 
@@ -374,6 +375,8 @@ int main()
 	fscanf_s(param, "%d", &maxIteracoes);
 	fscanf_s(param, "%d", &nPopulacao);
 	fscanf_s(param, "%d", &taxaMutacao);
+	fscanf_s(param, "%f", &pontoBuscaLocal);
+	pontoBuscaLocal = pontoBuscaLocal / 100 * maxIteracoes;
 
 
 
@@ -395,10 +398,10 @@ int main()
 	melhorSolucao.fitness = 9999999;
 	if (mode == 1 || mode == 3) {
 		printf("Rodando exaustivo...\n");
-		time_start = clock();
+		tempo_inicio = clock();
 		exaustivo();
-		time_end = clock();
-		tempo_exaust = time_end - time_start;
+		tempo_fim = clock();
+		tempo_exaust = tempo_fim - tempo_inicio;
 
 		fprintf_s(out_file, "Exaustivo:\n%f\n", melhorSolucao.fitness);
 		for (i = 0; i < numeroTotalArmas; i++)
@@ -414,17 +417,17 @@ int main()
 	melhorSolucao.fitness = 9999999;
 	if (mode == 2 || mode == 3) {
 		printf("\nRodando meta-heuristica...\n");
-		time_start = clock();
+		tempo_inicio = clock();
 		iniciarpopulacao();
 		for (iteracao = 0; iteracao < maxIteracoes; iteracao++) {
 			crossover();
 			mutacao();
-			if (iteracao > (0.95 * maxIteracoes))
+			if (iteracao > pontoBuscaLocal)
 				buscal_local();
 			avaliar_populacao();
 		}
-		time_end = clock();
-		tempo_metaheuristica = time_end - time_start;
+		tempo_fim = clock();
+		tempo_metaheuristica = tempo_fim - tempo_inicio;
 
 		fprintf_s(out_file, "Meta-heuristica:\n%f\n", melhorSolucao.fitness);
 		for (i = 0; i < numeroTotalArmas; i++)
