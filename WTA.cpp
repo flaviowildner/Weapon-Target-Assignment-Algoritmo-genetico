@@ -235,14 +235,13 @@ void crossover() {
 	}
 
 	if (total > RAND_MAX)
-		over += total / RAND_MAX;		
-		
-
+		over += total / RAND_MAX;
 
 	for (i = 0; i < nPopulacao; i++) {
 
 		//SELECAO DOS PAIS
 		corte = (rand() % (numeroTotalArmas - 1)) + 1;
+
 
 		for (j = 0; j < over; j++)
 			random += (float)rand();
@@ -330,7 +329,6 @@ void imp_seq_n_base_m(cromossomo &seq, int n, int m) {
 			}
 			printf_s("\t%f\n", melhorSolucao.fitness);
 		}
-		
 	} while (proxima(seq, n, m) == 0);
 }
 
@@ -388,15 +386,15 @@ int main()
 
 	do {
 		system("cls");
-		printf_s("1- Metodo exaustivo\n2- Metodo meta-heuristica\n3- Ambos\nOpcao: ");
+		printf_s("1- Metodo exaustivo\n2- Metodo meta-heuristica\n3- Metodo meta-heuristica com busca local\n4- Ambos\n5- Ambos com buscal local\nOpcao: ");
 		scanf_s("%d", &mode);
-	} while (mode < 1 || mode > 3);
+	} while (mode < 1 || mode > 5);
 	
 
 
 	//EXAUSTIVO
 	melhorSolucao.fitness = 9999999;
-	if (mode == 1 || mode == 3) {
+	if (mode == 1 || mode == 4 || mode == 5) {
 		printf("Rodando exaustivo...\n");
 		tempo_inicio = clock();
 		exaustivo();
@@ -415,21 +413,24 @@ int main()
 
 	//META-HEURISTICA
 	melhorSolucao.fitness = 9999999;
-	if (mode == 2 || mode == 3) {
+	if (mode > 1 && mode < 6) {
 		printf("\nRodando meta-heuristica...\n");
 		tempo_inicio = clock();
 		iniciarpopulacao();
 		for (iteracao = 0; iteracao < maxIteracoes; iteracao++) {
 			crossover();
 			mutacao();
-			if (iteracao > pontoBuscaLocal)
+			if (iteracao > pontoBuscaLocal && mode == 3 || mode == 5)
 				buscal_local();
 			avaliar_populacao();
 		}
 		tempo_fim = clock();
 		tempo_metaheuristica = tempo_fim - tempo_inicio;
 
-		fprintf_s(out_file, "Meta-heuristica:\n%f\n", melhorSolucao.fitness);
+		if(mode == 3 || mode == 5)
+			fprintf_s(out_file, "Meta-heuristica com busca local:\n%f\n", melhorSolucao.fitness);
+		else
+			fprintf_s(out_file, "Meta-heuristica:\n%f\n", melhorSolucao.fitness);
 		for (i = 0; i < numeroTotalArmas; i++)
 			fprintf_s(out_file, "%d ", melhorSolucao.armas[i].alvo.tipo);
 
