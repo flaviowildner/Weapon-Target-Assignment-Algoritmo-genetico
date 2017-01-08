@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 struct alvo {
 	float valor;
@@ -25,7 +26,7 @@ int nPopulacao = 0;
 int taxaMutacao;
 int iteracao;
 int maxIteracoes;
-
+float pontoBuscaLocal = 1;
 
 
 
@@ -40,21 +41,35 @@ struct cromossomo melhorSolucao;
 
 
 void ordenarPopulacao() {
-	int min;
-	int i, j;
+	int nPopulacaoTemp = nPopulacao;
+	int i = nPopulacao / 2, pai, filho;
 	struct cromossomo aux;
-	for (i = 0; i < nPopulacao; i++)
-	{
-		min = i;
-		for (j = i + 1; j < nPopulacao; j++) {
-			if (populacao[j].fitness < populacao[min].fitness)
-				min = j;
-		}
-		if (i != min) {
+	for (;;) {
+		if (i > 0) {
+			i--;
 			aux = populacao[i];
-			populacao[i] = populacao[min];
-			populacao[min] = aux;
 		}
+		else {
+			nPopulacaoTemp--;
+			if (nPopulacaoTemp == 0) return;
+			aux = populacao[nPopulacaoTemp];
+			populacao[nPopulacaoTemp] = populacao[0];
+		}
+		pai = i;
+		filho = i * 2 + 1;
+		while (filho < nPopulacaoTemp) {
+			if ((filho + 1 < nPopulacaoTemp) && (populacao[filho + 1].fitness > populacao[filho].fitness))
+				filho++;
+			if (populacao[filho].fitness > aux.fitness) {
+				populacao[pai] = populacao[filho];
+				pai = filho;
+				filho = pai * 2 + 1;
+			}
+			else {
+				break;
+			}
+		}
+		populacao[pai] = aux;
 	}
 }
 
@@ -110,10 +125,10 @@ void avaliar_populacao() {
 			melhorSolucao.fitness = populacao[0].fitness;
 			iteracao = 0;
 		}
-		for (k = 0; k < numeroTotalArmas; k++) {
+		/*for (k = 0; k < numeroTotalArmas; k++) {
 			printf_s("%1d ", melhorSolucao.armas[k].alvo.tipo);
 		}
-		printf_s("\t%f\n", melhorSolucao.fitness);
+		printf_s("\t%f\n", melhorSolucao.fitness);*/
 	}
 }
 
@@ -235,7 +250,7 @@ void crossover() {
 	}
 
 	if (total > RAND_MAX)
-		over += total / RAND_MAX;
+		over += (int)(total / RAND_MAX);
 
 	for (i = 0; i < nPopulacao; i++) {
 
@@ -255,7 +270,7 @@ void crossover() {
 			}
 		}
 
-		
+
 		do {
 			random2 = 0;
 			for (j = 0; j < over; j++)
@@ -270,7 +285,7 @@ void crossover() {
 				}
 			}
 		} while (selecionado1 == selecionado2);
-			
+
 		selecionado1 = abs(selecionado1 - (nPopulacao - 1));
 		selecionado2 = abs(selecionado2 - (nPopulacao - 1));
 		////////////////////////
@@ -298,7 +313,7 @@ void crossover() {
 int proxima(cromossomo &seq, int N, int M) {
 	int t = N - 1;
 	while (t >= 0) {
-		
+
 		seq.armas[t].alvo.tipo = (seq.armas[t].alvo.tipo + 1) % M;
 		if (seq.armas[t].alvo.tipo == 0)
 			t--;
@@ -315,19 +330,19 @@ void imp_seq_n_base_m(cromossomo &seq, int n, int m) {
 	for (i = 0; i < n; i++)
 		seq.armas[i].alvo.tipo = 0;
 	do {
-		
+
 		curr = avaliar(seq);
-		
+
 		if (curr < melhorSolucao.fitness) {
 			melhorSolucao.fitness = curr;
 			for (k = 0; k < numeroTotalArmas; k++) {
 				melhorSolucao.armas[k].alvo.tipo = seq.armas[k].alvo.tipo;
 			}
-			
-			for (k = 0; k < numeroTotalArmas; k++) {
+
+			/*for (k = 0; k < numeroTotalArmas; k++) {
 				printf_s("%d ", seq.armas[k].alvo.tipo);
 			}
-			printf_s("\t%f\n", melhorSolucao.fitness);
+			printf_s("\t%f\n", melhorSolucao.fitness);*/
 		}
 	} while (proxima(seq, n, m) == 0);
 }
@@ -338,9 +353,38 @@ void exaustivo() {
 	current.armas = (struct arma*)malloc(numeroTotalArmas * sizeof(struct arma));
 	for (i = 0; i < numeroTotalArmas; i++)
 		current.armas[i].tipo = VetorArmas[i].tipo;
-	
+
 
 	imp_seq_n_base_m(current, numeroTotalArmas, numeroAlvos);
+}
+
+void algoritmoGenetico() {
+	iniciarpopulacao();
+	for (iteracao = 0; iteracao < maxIteracoes; iteracao++) {
+		crossover();
+		mutacao();
+		avaliar_populacao();
+	}
+}
+
+void algoritmoGeneticoComBuscalocal() {
+	clock_t tempo_inicio;
+	clock_t tempo_fim;
+	clock_t tempo_current;
+
+	iniciarpopulacao();
+
+	tempo_inicio = clock();
+	tempo_fim = tempo_inicio + 10 * 1000;
+	tempo_current = clock();
+	while(tempo_current < tempo_fim) {
+		crossover();
+		mutacao();
+		if (iteracao > pontoBuscaLocal)
+			buscal_local();
+		avaliar_populacao();
+		tempo_current = clock();
+	}
 }
 
 int main()
@@ -348,7 +392,6 @@ int main()
 	int i;
 	int mode;
 	int msec;
-	float pontoBuscaLocal = 1;
 
 
 
@@ -378,7 +421,7 @@ int main()
 
 
 
-	
+
 
 	start(in_file);
 	fprintf_s(out_file, "Para %d armas e %d alvos:\n", numeroTotalArmas, numeroAlvos);
@@ -386,18 +429,20 @@ int main()
 
 	do {
 		system("cls");
-		printf_s("1- Metodo exaustivo\n2- Metodo meta-heuristica\n3- Metodo meta-heuristica com busca local\n4- Ambos\n5- Ambos com buscal local\nOpcao: ");
+		printf_s("1- Metodo exaustivo\n2- Metodo meta-heuristica\n3- Metodo meta-heuristica com busca local\n4- Benchmark com exaustivo\n5- Benchmark\nOpcao: ");
 		scanf_s("%d", &mode);
-	} while (mode < 1 || mode > 5);
-	
+	} while (mode < 1 || mode > 7);
+
 
 
 	//EXAUSTIVO
 	melhorSolucao.fitness = 9999999;
-	if (mode == 1 || mode == 4 || mode == 5) {
+	if (mode == 1) {
 		printf("Rodando exaustivo...\n");
 		tempo_inicio = clock();
+
 		exaustivo();
+
 		tempo_fim = clock();
 		tempo_exaust = tempo_fim - tempo_inicio;
 
@@ -411,26 +456,23 @@ int main()
 	///////////////////////////////////////
 
 
-	//META-HEURISTICA
+	//HEURISTICA
 	melhorSolucao.fitness = 9999999;
-	if (mode > 1 && mode < 6) {
-		printf("\nRodando meta-heuristica...\n");
+	if (mode == 2 || mode == 3) {
+		printf("Rodando meta-heuristica...\n");
 		tempo_inicio = clock();
-		iniciarpopulacao();
-		for (iteracao = 0; iteracao < maxIteracoes; iteracao++) {
-			crossover();
-			mutacao();
-			if (iteracao > pontoBuscaLocal && mode == 3 || mode == 5)
-				buscal_local();
-			avaliar_populacao();
-		}
+		if (mode == 2)
+			algoritmoGenetico();
+		else
+			algoritmoGeneticoComBuscalocal();
+
 		tempo_fim = clock();
 		tempo_metaheuristica = tempo_fim - tempo_inicio;
 
-		if(mode == 3 || mode == 5)
-			fprintf_s(out_file, "Meta-heuristica com busca local:\n%f\n", melhorSolucao.fitness);
-		else
+		if (mode == 2)
 			fprintf_s(out_file, "Meta-heuristica:\n%f\n", melhorSolucao.fitness);
+		else
+			fprintf_s(out_file, "Meta-heuristica com busca local:\n%f\n", melhorSolucao.fitness);
 		for (i = 0; i < numeroTotalArmas; i++)
 			fprintf_s(out_file, "%d ", melhorSolucao.armas[i].alvo.tipo);
 
@@ -438,6 +480,109 @@ int main()
 		fprintf_s(out_file, "\nTempo de execucao: %d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
 	}
 	//////////////////////////////////////
+
+
+	
+	//BENCHMARK
+	if (mode == 4 || mode == 5) {
+		int iteracoesBench;
+		float mediaMeta = 0;
+		float mediaTimeMeta = 0;
+		printf("Digite o numero de testes: ");
+		scanf_s("%d", &iteracoesBench);
+
+		fprintf_s(out_file, "Benchmark\n");
+
+		
+		if (mode == 4) {
+
+			printf("Exaustivo...\n");
+			fprintf_s(out_file, "\nExaustivo:\n");
+			melhorSolucao.fitness = 9999999;
+			tempo_inicio = clock();
+
+			exaustivo();
+
+			tempo_fim = clock();
+			tempo_exaust = tempo_fim - tempo_inicio;
+
+			fprintf_s(out_file, "%f\n", melhorSolucao.fitness);
+
+			msec = tempo_exaust * 1000 / CLOCKS_PER_SEC;
+			fprintf_s(out_file, "Tempo de execucao: %d segundos %d milisegundos\n", msec / 1000, msec % 1000);
+		}
+
+
+		/////1
+		printf("Heuristica\n");
+		fprintf_s(out_file, "\n\nHeuristica:\n");
+		for (i = 0; i < iteracoesBench; i++) {
+			printf("Tentativa %d...\n", i + 1);
+			melhorSolucao.fitness = 9999999;
+			tempo_inicio = clock();
+
+			algoritmoGenetico();
+
+			tempo_fim = clock();
+			tempo_metaheuristica = tempo_fim - tempo_inicio;
+
+			mediaMeta += melhorSolucao.fitness;
+			mediaTimeMeta += tempo_metaheuristica;
+
+			fprintf_s(out_file, "%f\n", melhorSolucao.fitness);
+			msec = tempo_metaheuristica * 1000 / CLOCKS_PER_SEC;
+			fprintf_s(out_file, "%d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+		}
+		mediaMeta /= iteracoesBench;
+		mediaTimeMeta /= iteracoesBench;
+
+		fprintf_s(out_file, "Media: %f\n", mediaMeta);
+
+		msec = mediaTimeMeta * 1000 / CLOCKS_PER_SEC;
+		fprintf_s(out_file, "\nTempo medio: %d segundos %d milisegundos\n", msec / 1000, msec % 1000);
+
+
+
+		/////2
+		mediaMeta = 0;
+		mediaTimeMeta = 0;
+
+		printf("Heuristica com busca local\n");
+		fprintf_s(out_file, "\n\nMeta-heuristica com busca local:\n");
+		for (i = 0; i < iteracoesBench; i++) {
+			printf("Tentativa %d...\n", i + 1);
+			melhorSolucao.fitness = 9999999;
+			tempo_inicio = clock();
+
+			algoritmoGeneticoComBuscalocal();
+
+			tempo_fim = clock();
+			tempo_metaheuristica = tempo_fim - tempo_inicio;
+
+			mediaMeta += melhorSolucao.fitness;
+			mediaTimeMeta += tempo_metaheuristica;
+
+			fprintf_s(out_file, "%f\n", melhorSolucao.fitness);
+			msec = tempo_metaheuristica * 1000 / CLOCKS_PER_SEC;
+			fprintf_s(out_file, "%d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+		}
+		mediaMeta /= iteracoesBench;
+		mediaTimeMeta /= iteracoesBench;
+
+		fprintf_s(out_file, "Media: %f\n", mediaMeta);
+
+		msec = mediaTimeMeta * 1000 / CLOCKS_PER_SEC;
+		fprintf_s(out_file, "\nTempo medio: %d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+
+	}
+
+
+
+
+
+
+
+	///////////////////////////////////////
 
 
 
