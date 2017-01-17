@@ -455,7 +455,7 @@ int main()
 
 	do {
 		system("cls");
-		printf_s("1- Metodo exaustivo\n2- Metodo meta-heuristica\n3- Metodo meta-heuristica com busca local\n4- Benchmark com exaustivo\n5- Benchmark\nOpcao: ");
+		printf_s("1- Metodo exaustivo\n2- Metodo meta-heuristica\n3- Metodo meta-heuristica com busca local\n4- Benchmark heuristica sem busca local\n5- Benchmark heuristica com busca local\nOpcao: ");
 		scanf_s("%d", &mode);
 	} while (mode < 1 || mode > 7);
 
@@ -547,85 +547,65 @@ int main()
 
 		
 		if (mode == 4) {
-			printf("Exaustivo...\n");
-			fprintf_s(out_file, "\nExaustivo:\n");
-			melhorSolucao.fitness = 9999999;
-			tempo_inicio = clock();
+			printf("Heuristica sem busca local\n");
+			fprintf_s(out_file, "\n\nHeuristica sem busca local:\n");
+			for (i = 0; i < iteracoesBench; i++) {
+				printf("Tentativa %d...\n", i + 1);
+				melhorSolucao.fitness = 9999999;
+				tempo_inicio = clock();
 
-			exaustivo();
+				iniciarpopulacao();
+				algoritmoGenetico();
 
-			tempo_fim = clock();
-			tempo_exaust = tempo_fim - tempo_inicio;
+				tempo_fim = clock();
+				tempo_metaheuristica = tempo_fim - tempo_inicio;
 
-			fprintf_s(out_file, "%f\n", melhorSolucao.fitness);
+				mediaMeta += melhorSolucao.fitness;
+				mediaTimeMeta += tempo_metaheuristica;
 
-			msec = tempo_exaust * 1000 / CLOCKS_PER_SEC;
-			fprintf_s(out_file, "Tempo de execucao: %d segundos %d milisegundos\n", msec / 1000, msec % 1000);
+				fprintf_s(out_file, "%f\n", melhorSolucao.fitness);
+				msec = tempo_metaheuristica * 1000 / CLOCKS_PER_SEC;
+				fprintf_s(out_file, "%d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+			}
+			mediaMeta /= iteracoesBench;
+			mediaTimeMeta /= iteracoesBench;
+
+			fprintf_s(out_file, "Media: %f\n", mediaMeta);
+
+			msec = mediaTimeMeta * 1000 / CLOCKS_PER_SEC;
+			fprintf_s(out_file, "Tempo medio: %d segundos %d milisegundos\n", msec / 1000, msec % 1000);
 		}
+		else {
 
+			printf("Heuristica com busca local\n");
+			fprintf_s(out_file, "\n\nMeta-heuristica com busca local:\n");
+			for (i = 0; i < iteracoesBench; i++) {
+				printf("Tentativa %d...\n", i + 1);
+				melhorSolucao.fitness = 9999999;
+				tempo_inicio = clock();
 
-		/////1
-		printf("Heuristica\n");
-		fprintf_s(out_file, "\n\nHeuristica:\n");
-		for (i = 0; i < iteracoesBench; i++) {
-			printf("Tentativa %d...\n", i + 1);
-			melhorSolucao.fitness = 9999999;
-			tempo_inicio = clock();
+				iniciarpopulacao();
+				algoritmoGeneticoComBuscalocal();
 
-			iniciarpopulacao();
-			algoritmoGenetico();
+				tempo_fim = clock();
+				tempo_metaheuristica = tempo_fim - tempo_inicio;
 
-			tempo_fim = clock();
-			tempo_metaheuristica = tempo_fim - tempo_inicio;
+				mediaMeta += melhorSolucao.fitness;
+				mediaTimeMeta += tempo_metaheuristica;
 
-			mediaMeta += melhorSolucao.fitness;
-			mediaTimeMeta += tempo_metaheuristica;
+				fprintf_s(out_file, "%f\n", melhorSolucao.fitness);
+				msec = tempo_metaheuristica * 1000 / CLOCKS_PER_SEC;
+				fprintf_s(out_file, "%d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+			}
+			mediaMeta /= iteracoesBench;
+			mediaTimeMeta /= iteracoesBench;
 
-			fprintf_s(out_file, "%f\n", melhorSolucao.fitness);
-			msec = tempo_metaheuristica * 1000 / CLOCKS_PER_SEC;
-			fprintf_s(out_file, "%d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+			fprintf_s(out_file, "Media: %f\n", mediaMeta);
+
+			msec = mediaTimeMeta * 1000 / CLOCKS_PER_SEC;
+			fprintf_s(out_file, "Tempo medio: %d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
 		}
-		mediaMeta /= iteracoesBench;
-		mediaTimeMeta /= iteracoesBench;
-
-		fprintf_s(out_file, "Media: %f\n", mediaMeta);
-
-		msec = mediaTimeMeta * 1000 / CLOCKS_PER_SEC;
-		fprintf_s(out_file, "Tempo medio: %d segundos %d milisegundos\n", msec / 1000, msec % 1000);
-
-
-
-		/////2
-		mediaMeta = 0;
-		mediaTimeMeta = 0;
-
-		printf("Heuristica com busca local\n");
-		fprintf_s(out_file, "\n\nMeta-heuristica com busca local:\n");
-		for (i = 0; i < iteracoesBench; i++) {
-			printf("Tentativa %d...\n", i + 1);
-			melhorSolucao.fitness = 9999999;
-			tempo_inicio = clock();
-
-			iniciarpopulacao();
-			algoritmoGeneticoComBuscalocal();
-
-			tempo_fim = clock();
-			tempo_metaheuristica = tempo_fim - tempo_inicio;
-
-			mediaMeta += melhorSolucao.fitness;
-			mediaTimeMeta += tempo_metaheuristica;
-
-			fprintf_s(out_file, "%f\n", melhorSolucao.fitness);
-			msec = tempo_metaheuristica * 1000 / CLOCKS_PER_SEC;
-			fprintf_s(out_file, "%d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
-		}
-		mediaMeta /= iteracoesBench;
-		mediaTimeMeta /= iteracoesBench;
-
-		fprintf_s(out_file, "Media: %f\n", mediaMeta);
-
-		msec = mediaTimeMeta * 1000 / CLOCKS_PER_SEC;
-		fprintf_s(out_file, "Tempo medio: %d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+		
 
 		fprintf_s(out_file, "//////////////////////////////////////////////////\n\n");
 
