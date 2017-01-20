@@ -346,7 +346,7 @@ void imp_seq_n_base_m(struct cromossomo *seq, int n, int m) {
 
 void exaustivo() {
 	int i = 0;
-	cromossomo current;
+	struct cromossomo current;
 	current.armas = (struct arma*)malloc(numeroTotalArmas * sizeof(struct arma));
 	for (i = 0; i < numeroTotalArmas; i++)
 		current.armas[i].tipo = VetorArmas[i].tipo;
