@@ -79,7 +79,6 @@ void mutacao() {
 	int random;
 	int i, j;
 
-
 	for (i = 0; i < nPopulacao; i++) {
 		for (j = 0; j < numeroTotalArmas; j++) {
 			if (rand() % 100 < taxaMutacao) {
@@ -94,7 +93,7 @@ void mutacao() {
 	}
 }
 
-float avaliar(cromossomo &populacao) {
+float avaliar(struct cromossomo *populacao) {
 	float mult = 0;
 	float somatorio = 0;
 	float aux;
@@ -105,20 +104,19 @@ float avaliar(cromossomo &populacao) {
 		mult = 1;
 
 		for (k = 0; k < numeroTotalArmas; k++) {
-			if (populacao.armas[k].alvo.tipo == j) {
-				mult = (1 - matrizProbabilidades[populacao.armas[k].tipo][j]) * mult;
+			if (populacao->armas[k].alvo.tipo == j) {
+				mult = (1 - matrizProbabilidades[populacao->armas[k].tipo][j]) * mult;
 			}
 		}
 		somatorio += aux * mult;
-
 	}
-	populacao.fitness = somatorio;
+	populacao->fitness = somatorio;
 	return somatorio;
 }
 
 void avaliar_populacao() {
 	for (i = 0; i < nPopulacao; i++)
-		avaliar(populacao[i]);
+		avaliar(&populacao[i]);
 
 	ordenarPopulacao();
 	if (populacao[0].fitness < melhorSolucao.fitness) {
@@ -144,9 +142,9 @@ void buscal_local() {
 		for (j = 0; j < numeroTotalArmas; j++) {
 			for (k = 0; k < numeroAlvos; k++) {
 				temp.armas[j].alvo.tipo = k;
-				if (avaliar(temp) < populacao[i].fitness) {
+				if (avaliar(&temp) < populacao[i].fitness) {
 					populacao[i].armas[j].alvo.tipo = k;
-					avaliar(populacao[i]);
+					avaliar(&populacao[i]);
 				}
 			}
 			temp.armas[j].alvo.tipo = populacao[i].armas[j].alvo.tipo;
@@ -309,12 +307,12 @@ void crossover() {
 	}
 }
 
-int proxima(cromossomo &seq, int N, int M) {
+int proxima(struct cromossomo *seq, int N, int M) {
 	int t = N - 1;
 	while (t >= 0) {
 
-		seq.armas[t].alvo.tipo = (seq.armas[t].alvo.tipo + 1) % M;
-		if (seq.armas[t].alvo.tipo == 0)
+		seq->armas[t].alvo.tipo = (seq->armas[t].alvo.tipo + 1) % M;
+		if (seq->armas[t].alvo.tipo == 0)
 			t--;
 		else
 			return 0;
@@ -322,12 +320,12 @@ int proxima(cromossomo &seq, int N, int M) {
 	return -1;
 }
 
-void imp_seq_n_base_m(cromossomo &seq, int n, int m) {
+void imp_seq_n_base_m(struct cromossomo *seq, int n, int m) {
 	int i;
 	int k;
 	float curr = 999999;
 	for (i = 0; i < n; i++)
-		seq.armas[i].alvo.tipo = 0;
+		seq->armas[i].alvo.tipo = 0;
 	do {
 
 		curr = avaliar(seq);
@@ -335,7 +333,7 @@ void imp_seq_n_base_m(cromossomo &seq, int n, int m) {
 		if (curr < melhorSolucao.fitness) {
 			melhorSolucao.fitness = curr;
 			for (k = 0; k < numeroTotalArmas; k++) {
-				melhorSolucao.armas[k].alvo.tipo = seq.armas[k].alvo.tipo;
+				melhorSolucao.armas[k].alvo.tipo = seq->armas[k].alvo.tipo;
 			}
 
 			/*for (k = 0; k < numeroTotalArmas; k++) {
@@ -354,7 +352,7 @@ void exaustivo() {
 		current.armas[i].tipo = VetorArmas[i].tipo;
 
 
-	imp_seq_n_base_m(current, numeroTotalArmas, numeroAlvos);
+	imp_seq_n_base_m(&current, numeroTotalArmas, numeroAlvos);
 }
 
 void algoritmoGenetico() {
