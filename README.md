@@ -1,4 +1,4 @@
-# Weapon Target Assignment-Problem
+# Weapon Target Assignment-NP-Problem
 
 Weapon Target Assignment - Algoritmo genetico com buscal local
 
