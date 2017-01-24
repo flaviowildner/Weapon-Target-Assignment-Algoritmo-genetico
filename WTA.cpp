@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
@@ -26,7 +26,7 @@ int nPopulacao = 0;
 int taxaMutacao;
 int iteracao;
 int maxIteracoes;
-float pontoBuscaLocal = 1;
+int pontoBuscaLocal = 1;
 int tempoLimite;
 int criterioParada;
 
@@ -123,9 +123,9 @@ void avaliar_populacao() {
 		melhorSolucao = populacao[0];
 		iteracao = 0;
 		for (k = 0; k < numeroTotalArmas; k++) {
-			printf_s("%1d ", melhorSolucao.armas[k].alvo.tipo);
+			printf("%1d ", melhorSolucao.armas[k].alvo.tipo);
 		}
-		printf_s("\t%f\n", melhorSolucao.fitness);
+		printf("\t%f\n", melhorSolucao.fitness);
 	}
 }
 
@@ -167,12 +167,10 @@ void start(FILE *in_file) {
 	int intTemp;
 	float floatTemp;
 	float tempProbabilidades;
-	//printf("Insira o numero de tipos de armas: ");
-	fscanf_s(in_file, "%d", &numeroTipoArmas);
+	fscanf(in_file, "%d", &numeroTipoArmas);
 
 	for (i = 0; i < numeroTipoArmas; i++) {
-		//printf("Insira a quantidade de armas do tipo %d: ", i);
-		fscanf_s(in_file, "%d", &intTemp);
+		fscanf(in_file, "%d", &intTemp);
 
 		numeroTotalArmas += intTemp;
 
@@ -186,14 +184,12 @@ void start(FILE *in_file) {
 	intTemp = 0;
 
 
-	//printf("Insira o numero de alvos: ");
-	fscanf_s(in_file, "%d", &numeroAlvos);
+	fscanf(in_file, "%d", &numeroAlvos);
 	VetorAlvos = (struct alvo*)malloc(numeroAlvos * sizeof(struct alvo));
 
 
 	for (i = 0; i < numeroAlvos; i++) {
-		//printf("Insira o valor do alvo %d: ", i);
-		fscanf_s(in_file, "%f", &floatTemp);
+		fscanf(in_file, "%f", &floatTemp);
 		VetorAlvos[i].valor = floatTemp;
 		VetorAlvos[i].tipo = i;
 	}
@@ -207,10 +203,8 @@ void start(FILE *in_file) {
 
 	for (i = 0; i < numeroTipoArmas; i++) {
 		for (j = 0; j < numeroAlvos; j++) {
-			//printf("Insira a chance da arma de tipo %d destruir o alvo %d: ", i + 1, j + 1);
-			fscanf_s(in_file, "%f", &tempProbabilidades);
+			fscanf(in_file, "%f", &tempProbabilidades);
 			matrizProbabilidades[i][j] = tempProbabilidades;
-			//matrizProbabilidades[i][j] = ((float)rand() / (float)(RAND_MAX));
 		}
 	}
 }
@@ -335,11 +329,6 @@ void imp_seq_n_base_m(struct cromossomo *seq, int n, int m) {
 			for (k = 0; k < numeroTotalArmas; k++) {
 				melhorSolucao.armas[k].alvo.tipo = seq->armas[k].alvo.tipo;
 			}
-
-			/*for (k = 0; k < numeroTotalArmas; k++) {
-				printf_s("%d ", seq.armas[k].alvo.tipo);
-			}
-			printf_s("\t%f\n", melhorSolucao.fitness);*/
 		}
 	} while (proxima(seq, n, m) == 0);
 }
@@ -392,7 +381,6 @@ void algoritmoGeneticoComBuscalocal() {
 			if (iteracao > pontoBuscaLocal)
 				buscal_local();
 			ordenarPopulacao();
-			//avaliar_populacao();
 		}
 	}
 	else if (criterioParada == 2) {
@@ -410,6 +398,99 @@ void algoritmoGeneticoComBuscalocal() {
 	}
 }
 
+void gerarInstancia(){
+    srand((unsigned)time(NULL));
+    FILE *out_file;
+
+    int numeroTotalArmas;
+    int numeroAlvos;
+    int i;
+
+    system("cls");
+
+
+
+
+    do {
+		system("cls");
+		printf("Numero de alvos: ");
+        scanf("%d", &numeroAlvos);
+	} while (numeroAlvos < 0);
+
+	do {
+		system("cls");
+		printf("Numero de armas: ");
+        scanf("%d", &numeroTotalArmas);
+	} while (numeroTotalArmas < 0);
+
+
+
+    out_file = fopen("Instancia.txt", "w");
+
+
+    fprintf(out_file, "%d\n", numeroTotalArmas);
+    for (i = 0; i < numeroTotalArmas; i++) {
+        fprintf(out_file, "1\n");
+    }
+    fprintf(out_file, "%d\n", numeroAlvos);
+    for (i = 0; i < numeroAlvos; i++) {
+        fprintf(out_file, "%d\n", rand() % 100);
+    }
+    for (i = 0; i < numeroTotalArmas * numeroAlvos; i++) {
+        fprintf(out_file, "%f\n", (float)rand() / (float)(RAND_MAX));
+    }
+
+    fclose(out_file);
+
+}
+
+void gerarParam(){
+    srand((unsigned)time(NULL));
+    FILE *out_file;
+
+    int maxIteracoes;
+    int nPopulacao;
+    int taxaMutacao;
+    int pontoBuscaLocal;
+
+
+    do {
+		system("cls");
+		printf("Numero de iteracoes sem melhora: ");
+        scanf("%d", &maxIteracoes);
+	} while (numeroAlvos < 0);
+
+	do {
+		system("cls");
+		printf("Numero de individuos na populacao: ");
+        scanf("%d", &nPopulacao);
+	} while (numeroTotalArmas < 0);
+	do {
+		system("cls");
+		printf("Taxa mutacao: ");
+        scanf("%d", &taxaMutacao);
+	} while (numeroAlvos < 0);
+
+	do {
+		system("cls");
+		printf("Ponto busca local(0-100): ");
+        scanf("%d", &pontoBuscaLocal);
+	} while (numeroTotalArmas < 0);
+
+
+    out_file = fopen("Parametros.txt", "w");
+
+
+
+    fprintf(out_file, "%d\n", maxIteracoes);
+    fprintf(out_file, "%d\n", nPopulacao);
+    fprintf(out_file, "%d\n", taxaMutacao);
+    fprintf(out_file, "%d\n", pontoBuscaLocal);
+
+    fclose(out_file);
+
+}
+
 int main()
 {
 	int i;
@@ -423,62 +504,71 @@ int main()
 	clock_t tempo_fim;
 	clock_t tempo_exaust;
 	clock_t tempo_metaheuristica;
-	clock_t tempo_current;
 
-	FILE *out_file;
-	FILE *in_file;
-	FILE *param;
+	FILE *out_file = 0;
+	FILE *in_file = 0;
+	FILE *param_file = 0;
 
-
-	fopen_s(&out_file, "Resultados.txt", "a+");
-	fopen_s(&in_file, "Entrada.txt", "r");
-	fopen_s(&param, "Parametros.txt", "r");
-	if (in_file == NULL || param == NULL) {
-		printf_s("Arquivos de entrada inexistentes.\n");
-		return 0;
-	}
-	fscanf_s(param, "%d", &maxIteracoes);
-	fscanf_s(param, "%d", &nPopulacao);
-	fscanf_s(param, "%d", &taxaMutacao);
-	fscanf_s(param, "%f", &pontoBuscaLocal);
-	pontoBuscaLocal = pontoBuscaLocal / 100 * maxIteracoes;
-
-
-
-
-
-	start(in_file);
-	
 
 
 	do {
 		system("cls");
-		printf_s("1- Metodo exaustivo\n2- Metodo meta-heuristica\n3- Metodo meta-heuristica com busca local\n4- Benchmark heuristica sem busca local\n5- Benchmark heuristica com busca local\nOpcao: ");
-		scanf_s("%d", &mode);
+		printf("1- Metodo exaustivo\n2- Metodo meta-heuristica\n3- Metodo meta-heuristica com busca local\n4- Benchmark heuristica sem busca local\n5- Benchmark heuristica com busca local\n6- Gerar arquivo instancia\n7- Gerar arquivo parametro\nOpcao: ");
+		scanf("%d", &mode);
 	} while (mode < 1 || mode > 7);
 
-	
-	if (mode != 1) {
-		do {
-			system("cls");
-			printf_s("Criterio de parada:\n1- Iteracoes sem melhora\n2- Tempo limite de execucao\nOpcao: ");
-			scanf_s("%d", &criterioParada);
-		} while (criterioParada < 1 || criterioParada > 2);
 
-		if (criterioParada == 2) {
-			do {
-				system("cls");
-				printf_s("Digita o tempo limite em segundos: ");
-				scanf_s("%d", &tempoLimite);
-			} while (tempoLimite < 0);
-			pontoBuscaLocal = 0;
-		}
+
+	if (mode > 0 && mode < 6) {
+        in_file = fopen("Instancia.txt", "r");
+        param_file = fopen("Parametros.txt", "r");
+        if (in_file == 0 && param_file != 0) {
+            printf("Arquivos de instancia inexistente.\n");
+            system("pause");
+            return 0;
+        }else if(in_file != 0 && param_file == 0){
+            printf("Arquivos de parametro inexistente.\n");
+            system("pause");
+            return 0;
+        }else if(in_file == 0 && param_file == 0){
+            printf("Arquivos de instancia e parametros inexistentes.\n");
+            system("pause");
+            return 0;
+        }
+
+        if(mode > 1){
+            fscanf(param_file, "%d", &maxIteracoes);
+            fscanf(param_file, "%d", &nPopulacao);
+            fscanf(param_file, "%d", &taxaMutacao);
+            fscanf(param_file, "%d", &pontoBuscaLocal);
+
+            pontoBuscaLocal = pontoBuscaLocal / 100 * maxIteracoes;
+
+            start(in_file);
+
+            out_file = fopen("Resultados.txt", "a+");
+
+            do {
+                system("cls");
+                printf("Criterio de parada:\n1- Iteracoes sem melhora\n2- Tempo limite de execucao\nOpcao: ");
+                scanf("%d", &criterioParada);
+            } while (criterioParada < 1 || criterioParada > 2);
+
+            if (criterioParada == 2) {
+                do {
+                    system("cls");
+                    printf("Digita o tempo limite em segundos: ");
+                    scanf("%d", &tempoLimite);
+                } while (tempoLimite < 0);
+                pontoBuscaLocal = 0;
+            }
+        }
 	}
-	
 
 
 
-	fprintf_s(out_file, "Para %d armas e %d alvos:\n", numeroTotalArmas, numeroAlvos);
+
+	fprintf(out_file, "Para %d armas e %d alvos:\n", numeroTotalArmas, numeroAlvos);
 
 	//EXAUSTIVO
 	melhorSolucao.fitness = 9999999;
@@ -491,12 +581,12 @@ int main()
 		tempo_fim = clock();
 		tempo_exaust = tempo_fim - tempo_inicio;
 
-		fprintf_s(out_file, "Exaustivo:\n%f\n", melhorSolucao.fitness);
+		fprintf(out_file, "Exaustivo:\n%f\n", melhorSolucao.fitness);
 		for (i = 0; i < numeroTotalArmas; i++)
-			fprintf_s(out_file, "%d ", melhorSolucao.armas[i].alvo.tipo);
+			fprintf(out_file, "%d ", melhorSolucao.armas[i].alvo.tipo);
 
 		msec = tempo_exaust * 1000 / CLOCKS_PER_SEC;
-		fprintf_s(out_file, "\nTempo de execucao: %d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+		fprintf(out_file, "\nTempo de execucao: %d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
 	}
 	///////////////////////////////////////
 
@@ -510,7 +600,7 @@ int main()
 		iniciarpopulacao();
 		if (mode == 2) {
 			algoritmoGenetico();
-		}	
+		}
 		else {
 			algoritmoGeneticoComBuscalocal();
 		}
@@ -519,19 +609,19 @@ int main()
 		tempo_metaheuristica = tempo_fim - tempo_inicio;
 
 		if (mode == 2)
-			fprintf_s(out_file, "Meta-heuristica:\n%f\n", melhorSolucao.fitness);
+			fprintf(out_file, "Meta-heuristica:\n%f\n", melhorSolucao.fitness);
 		else
-			fprintf_s(out_file, "Meta-heuristica com busca local:\n%f\n", melhorSolucao.fitness);
+			fprintf(out_file, "Meta-heuristica com busca local:\n%f\n", melhorSolucao.fitness);
 		for (i = 0; i < numeroTotalArmas; i++)
-			fprintf_s(out_file, "%d ", melhorSolucao.armas[i].alvo.tipo);
+			fprintf(out_file, "%d ", melhorSolucao.armas[i].alvo.tipo);
 
 		msec = tempo_metaheuristica * 1000 / CLOCKS_PER_SEC;
-		fprintf_s(out_file, "\nTempo de execucao: %d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+		fprintf(out_file, "\nTempo de execucao: %d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
 	}
 	//////////////////////////////////////
 
 
-	
+
 	//BENCHMARK
 	if (mode == 4 || mode == 5) {
 		int iteracoesBench;
@@ -539,14 +629,14 @@ int main()
 		float mediaTimeMeta = 0;
 		system("cls");
 		printf("Digite o numero de testes: ");
-		scanf_s("%d", &iteracoesBench);
+		scanf("%d", &iteracoesBench);
 
-		fprintf_s(out_file, "Benchmark\n");
+		fprintf(out_file, "Benchmark\n");
 
-		
+
 		if (mode == 4) {
 			printf("Heuristica sem busca local\n");
-			fprintf_s(out_file, "\n\nHeuristica sem busca local:\n");
+			fprintf(out_file, "\n\nHeuristica sem busca local:\n");
 			for (i = 0; i < iteracoesBench; i++) {
 				printf("Tentativa %d...\n", i + 1);
 				melhorSolucao.fitness = 9999999;
@@ -561,22 +651,21 @@ int main()
 				mediaMeta += melhorSolucao.fitness;
 				mediaTimeMeta += tempo_metaheuristica;
 
-				fprintf_s(out_file, "%f\n", melhorSolucao.fitness);
+				fprintf(out_file, "%f\n", melhorSolucao.fitness);
 				msec = tempo_metaheuristica * 1000 / CLOCKS_PER_SEC;
-				fprintf_s(out_file, "%d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+				fprintf(out_file, "%d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
 			}
 			mediaMeta /= iteracoesBench;
 			mediaTimeMeta /= iteracoesBench;
 
-			fprintf_s(out_file, "Media: %f\n", mediaMeta);
+			fprintf(out_file, "Media: %f\n", mediaMeta);
 
 			msec = mediaTimeMeta * 1000 / CLOCKS_PER_SEC;
-			fprintf_s(out_file, "Tempo medio: %d segundos %d milisegundos\n", msec / 1000, msec % 1000);
+			fprintf(out_file, "Tempo medio: %d segundos %d milisegundos\n", msec / 1000, msec % 1000);
 		}
 		else {
-
 			printf("Heuristica com busca local\n");
-			fprintf_s(out_file, "\n\nMeta-heuristica com busca local:\n");
+			fprintf(out_file, "\n\nMeta-heuristica com busca local:\n");
 			for (i = 0; i < iteracoesBench; i++) {
 				printf("Tentativa %d...\n", i + 1);
 				melhorSolucao.fitness = 9999999;
@@ -591,33 +680,39 @@ int main()
 				mediaMeta += melhorSolucao.fitness;
 				mediaTimeMeta += tempo_metaheuristica;
 
-				fprintf_s(out_file, "%f\n", melhorSolucao.fitness);
+				fprintf(out_file, "%f\n", melhorSolucao.fitness);
 				msec = tempo_metaheuristica * 1000 / CLOCKS_PER_SEC;
-				fprintf_s(out_file, "%d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+				fprintf(out_file, "%d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
 			}
 			mediaMeta /= iteracoesBench;
 			mediaTimeMeta /= iteracoesBench;
 
-			fprintf_s(out_file, "Media: %f\n", mediaMeta);
+			fprintf(out_file, "Media: %f\n", mediaMeta);
 
 			msec = mediaTimeMeta * 1000 / CLOCKS_PER_SEC;
-			fprintf_s(out_file, "Tempo medio: %d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
+			fprintf(out_file, "Tempo medio: %d segundos %d milisegundos\n\n", msec / 1000, msec % 1000);
 		}
-		
-
-		fprintf_s(out_file, "//////////////////////////////////////////////////\n\n");
+		fprintf(out_file, "//////////////////////////////////////////////////\n\n");
 
 	}
 
+	//GERADORES DO ARQUIVO DE INSTANCIAS E PARAMETROS
+    if(mode == 6){
+        gerarInstancia();
+    }
 
-
+    if(mode == 7){
+        gerarParam();
+    }
 	///////////////////////////////////////
 
 
 	fclose(in_file);
 	fclose(out_file);
-	fclose(param);
+	fclose(param_file);
 
 	system("pause");
 	return 0;
 }
+
+//OBS: system("cls") NO WINDOWS > system("clear"); NO LINUX
