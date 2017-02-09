@@ -1,0 +1,25 @@
+Formato arquivo instância:
+
+Número de armas
+Número de cópias para arma 0
+...
+Número de cópias para arma n
+Número de alvos
+Peso alvo 0
+...
+Peso alvo m
+Probabilidade de arma 0 em alvo 0
+Probabilidade de arma 0 em alvo 1
+...
+Probabilidade de arma n em alvo m-1
+Probabilidade de arma n em alvo m
+
+
+
+
+Formato arquivo Parâmetro:
+
+Número de iterações sem melhora
+Tamanho da população
+Taxa de mutação
+Ponto de busca local em % do número de iterações sem melhora
