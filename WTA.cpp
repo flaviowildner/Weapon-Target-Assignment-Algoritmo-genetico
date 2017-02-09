@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <math.h>
 
 
 struct alvo {
@@ -733,7 +732,7 @@ int main()
 			msec = mediaTimeMeta * 1000 / CLOCKS_PER_SEC;
 			fprintf(out_file, "Tempo medio: %d segundos %d milisegundos\n", msec / 1000, msec % 1000);
 		}
-		else {
+		else if(mode == 5){
 			printf("Heuristica com busca local\n");
 			fprintf(out_file, "\n\nMeta-heuristica com busca local:\n");
 			for (i = 0; i < iteracoesBench; i++) {
@@ -790,3 +789,4 @@ int main()
 }
 
 //OBS: system("cls") NO WINDOWS > system("clear"); NO LINUX
+//	   system("pause") NO WINDOWS > getchar(); NO LINUX
