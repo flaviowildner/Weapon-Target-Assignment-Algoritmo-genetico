@@ -2,6 +2,12 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifdef __linux__
+#define CLEAR_CONSOLE "clear"
+#elif _WIN32
+#define CLEAR_CONSOLE "cls"
+#endif
+
 
 struct alvo {
 	float valor;
@@ -406,19 +412,19 @@ void gerarInstancia() {
 	int numeroAlvos;
 	int i;
 
-	system("cls");
+	system(CLEAR_CONSOLE);
 
 
 
 
 	do {
-		system("cls");
+		system(CLEAR_CONSOLE);
 		printf("Numero de alvos: ");
 		scanf("%d", &numeroAlvos);
 	} while (numeroAlvos < 0);
 
 	do {
-		system("cls");
+		system(CLEAR_CONSOLE);
 		printf("Numero de armas: ");
 		scanf("%d", &numeroTotalArmas);
 	} while (numeroTotalArmas < 0);
@@ -455,24 +461,24 @@ void gerarParam() {
 
 
 	do {
-		system("cls");
+		system(CLEAR_CONSOLE);
 		printf("Numero de iteracoes sem melhora: ");
 		scanf("%d", &maxIteracoes);
 	} while (numeroAlvos < 0);
 
 	do {
-		system("cls");
+		system(CLEAR_CONSOLE);
 		printf("Numero de individuos na populacao: ");
 		scanf("%d", &nPopulacao);
 	} while (numeroTotalArmas < 0);
 	do {
-		system("cls");
+		system(CLEAR_CONSOLE);
 		printf("Taxa mutacao: ");
 		scanf("%d", &taxaMutacao);
 	} while (numeroAlvos < 0);
 
 	do {
-		system("cls");
+		system(CLEAR_CONSOLE);
 		printf("Ponto busca local(0-100): ");
 		scanf("%d", &pontoBuscaLocal);
 	} while (numeroTotalArmas < 0);
@@ -514,7 +520,7 @@ int main()
 
 
 	do {
-		system("cls");
+		system(CLEAR_CONSOLE);
 		printf("1- Metodo exaustivo\n2- Metodo meta-heuristica\n3- Metodo meta-heuristica com busca local\n4- Benchmark heuristica sem busca local\n5- Benchmark heuristica com busca local\n6- Gerar arquivo instancia\n7- Gerar arquivo parametro\nOpcao: ");
 		scanf("%d", &mode);
 	} while (mode < 1 || mode > 7);
@@ -526,7 +532,6 @@ int main()
 		in_file = fopen("Instancia.txt", "r");
 		if (in_file == 0) {
 			printf("Arquivos de instancia inexistente.\n");
-			system("pause");
 			return 0;
 		}
 		out_file = fopen("Resultados.txt", "a+");
@@ -560,17 +565,14 @@ int main()
 		param_file = fopen("Parametros.txt", "r");
 		if (in_file == 0 && param_file != 0) {
 			printf("Arquivos de instancia inexistente.\n");
-			system("pause");
 			return 0;
 		}
 		else if (in_file != 0 && param_file == 0) {
 			printf("Arquivos de parametro inexistente.\n");
-			system("pause");
 			return 0;
 		}
 		else if (in_file == 0 && param_file == 0) {
 			printf("Arquivos de instancia e parametros inexistentes.\n");
-			system("pause");
 			return 0;
 		}
 		out_file = fopen("Resultados.txt", "a+");
@@ -588,14 +590,14 @@ int main()
 
 
 		do {
-			system("cls");
+			system(CLEAR_CONSOLE);
 			printf("Criterio de parada:\n1- Iteracoes sem melhora\n2- Tempo limite de execucao\nOpcao: ");
 			scanf("%d", &criterioParada);
 		} while (criterioParada < 1 || criterioParada > 2);
 
 		if (criterioParada == 2) {
 			do {
-				system("cls");
+				system(CLEAR_CONSOLE);
 				printf("Digita o tempo limite em segundos: ");
 				scanf("%d", &tempoLimite);
 			} while (tempoLimite < 0);
@@ -604,7 +606,7 @@ int main()
 		fprintf(out_file, "Para %d armas e %d alvos:\n", numeroTotalArmas, numeroAlvos);
 
 
-		system("cls");
+		system(CLEAR_CONSOLE);
 
 		fprintf(out_file, "Benchmark\n");
 
@@ -650,17 +652,14 @@ int main()
 		param_file = fopen("Parametros.txt", "r");
 		if (in_file == 0 && param_file != 0) {
 			printf("Arquivos de instancia inexistente.\n");
-			system("pause");
 			return 0;
 		}
 		else if (in_file != 0 && param_file == 0) {
 			printf("Arquivos de parametro inexistente.\n");
-			system("pause");
 			return 0;
 		}
 		else if (in_file == 0 && param_file == 0) {
 			printf("Arquivos de instancia e parametros inexistentes.\n");
-			system("pause");
 			return 0;
 		}
 		out_file = fopen("Resultados.txt", "a+");
@@ -680,14 +679,14 @@ int main()
 
 
 		do {
-			system("cls");
+			system(CLEAR_CONSOLE);
 			printf("Criterio de parada:\n1- Iteracoes sem melhora\n2- Tempo limite de execucao\nOpcao: ");
 			scanf("%d", &criterioParada);
 		} while (criterioParada < 1 || criterioParada > 2);
 
 		if (criterioParada == 2) {
 			do {
-				system("cls");
+				system(CLEAR_CONSOLE);
 				printf("Digita o tempo limite em segundos: ");
 				scanf("%d", &tempoLimite);
 			} while (tempoLimite < 0);
@@ -696,7 +695,7 @@ int main()
 		fprintf(out_file, "Para %d armas e %d alvos:\n", numeroTotalArmas, numeroAlvos);
 
 
-		system("cls");
+		system(CLEAR_CONSOLE);
 		printf("Digite o numero de testes: ");
 		scanf("%d", &iteracoesBench);
 
@@ -763,6 +762,7 @@ int main()
 		}
 		fprintf(out_file, "//////////////////////////////////////////////////\n\n");
 
+
 		fclose(in_file);
 		fclose(out_file);
 		fclose(param_file);
@@ -782,11 +782,11 @@ int main()
 	///////////////////////////////////////
 
 
+	printf("Terminou.\n");
 
 
-	system("pause");
 	return 0;
 }
 
-//OBS: system("cls") NO WINDOWS > system("clear"); NO LINUX
+//OBS: system(CLEAR_CONSOLE) NO WINDOWS > system("clear"); NO LINUX
 //	   system("pause") NO WINDOWS > getchar(); NO LINUX
